@@ -18,140 +18,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Dia2Lib;
-
-// Most of the interop with msdia90.dll can be generated automatically
-// by added the DLL as a reference in the C# application.  Below are
-// definitions for elements that can't be generated automatically.
-namespace Dia2Lib
-{
-    [Guid("0CF4B60E-35B1-4c6c-BDD8-854B9C8E3857")]
-    [InterfaceType(1)]
-    public interface IDiaSectionContrib
-    {
-        IDiaSymbol compiland { get; }
-        uint addressSection { get; }
-        uint addressOffset { get; }
-        uint relativeVirtualAddress { get; }
-        ulong virtualAddress { get; }
-        uint length { get; }
-        bool notPaged { get; }
-        bool code { get; }
-        bool initializedData { get; }
-        bool uninitializedData { get; }
-        bool remove { get; }
-        bool comdat { get; }
-        bool discardable { get; }
-        bool notCached { get; }
-        bool share { get; }
-        bool execute { get; }
-        bool read { get; }
-        bool write { get; }
-        uint dataCrc { get; }
-        uint relocationsCrc { get; }
-        uint compilandId { get; }
-        bool code16bit { get; }
-    }
-
-    [Guid("1994DEB2-2C82-4b1d-A57F-AFF424D54A68")]
-    [InterfaceType(1)]
-    public interface IDiaEnumSectionContribs
-    {
-        IEnumerator GetEnumerator();
-        int count { get; }
-        IDiaSectionContrib Item(uint index);
-        void Next(uint celt, out IDiaSectionContrib rgelt, out uint pceltFetched);
-        void Skip(uint celt);
-        void Reset();
-        void Clone(out IDiaEnumSectionContribs ppenum);
-    }
-
-    enum NameSearchOptions
-    {
-        nsNone = 0,
-        nsfCaseSensitive = 0x1,
-        nsfCaseInsensitive = 0x2,
-        nsfFNameExt = 0x4,
-        nsfRegularExpression = 0x8,
-        nsfUndecoratedName = 0x10,
-        nsCaseSensitive = nsfCaseSensitive,
-        nsCaseInsensitive = nsfCaseInsensitive,
-        nsFNameExt = (nsfCaseInsensitive | nsfFNameExt),
-        nsRegularExpression = (nsfRegularExpression | nsfCaseSensitive),
-        nsCaseInRegularExpression = (nsfRegularExpression | nsfCaseInsensitive)
-    } ;
-
-    enum LocationType
-    { 
-       LocIsNull,
-       LocIsStatic,
-       LocIsTLS,
-       LocIsRegRel,
-       LocIsThisRel,
-       LocIsEnregistered,
-       LocIsBitField,
-       LocIsSlot,
-       LocIsIlRel,
-       LocInMetaData,
-       LocIsConstant,
-        LocTypeMax
-    }
-
-    // See http://msdn.microsoft.com/en-us/library/windows/desktop/ms680341(v=vs.85).aspx for
-    // more flag options and descriptions
-    [Flags]
-    public enum DataSectionFlags : uint
-    {
-        MemDiscardable = 0x02000000
-    }
-
-    // See http://msdn.microsoft.com/en-us/library/windows/desktop/ms680341(v=vs.85).aspx for
-    // documentation on IMAGE_SECTION_HEADER
-    [StructLayout(LayoutKind.Explicit)]
-    public struct ImageSectionHeader
-    {
-        [FieldOffset(0)]
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-        public byte[] ShortName;
-        [FieldOffset(8)]
-        public UInt32 VirtualSize;
-        [FieldOffset(12)]
-        public UInt32 VirtualAddress;
-        [FieldOffset(16)]
-        public UInt32 SizeOfRawData;
-        [FieldOffset(20)]
-        public UInt32 PointerToRawData;
-        [FieldOffset(24)]
-        public UInt32 PointerToRelocations;
-        [FieldOffset(28)]
-        public UInt32 PointerToLinenumbers;
-        [FieldOffset(32)]
-        public UInt16 NumberOfRelocations;
-        [FieldOffset(34)]
-        public UInt16 NumberOfLinenumbers;
-        [FieldOffset(36)]
-        public DataSectionFlags Characteristics;
-
-        public string Name => Encoding.UTF8.GetString(ShortName).TrimEnd('\0');
-    }
-
-    // This class is a specialization of IDiaEnumDebugStreamData.
-    // It has the same Guid as IDiaEnumDebugStreamData but explicitly
-    // marshals ImageSectionHeader types.
-    [Guid("486943E8-D187-4a6b-A3C4-291259FFF60D")]
-    [InterfaceType(1)]
-    public interface IDiaEnumDebugStreamSectionHeaders
-    {
-        System.Collections.IEnumerator GetEnumerator();
-        int count { get; }
-        string name { get; }
-
-        void Item(uint index, uint cbData, out uint pcbData, out ImageSectionHeader pbData);
-        void Next(uint celt, uint cbData, out uint pcbData, out ImageSectionHeader pbData, out uint pceltFetched);
-        void Skip(uint celt);
-        void Reset();
-        void Clone(out IDiaEnumDebugStreamSectionHeaders ppenum);
-    }
-}
+using SymbolSort.DebugInterfaceAccess;
 
 namespace SymbolSort
 {
@@ -166,7 +33,7 @@ namespace SymbolSort
         Section         = 0x010,
         Unmapped        = 0x020,
         Weak            = 0x040
-     };
+    };
 
     class Symbol
     {
@@ -183,9 +50,9 @@ namespace SymbolSort
 
     class MergedSymbol
     {
-        public string   id;
-        public int      total_count;
-        public int      total_size;
+        public string id;
+        public int total_count;
+        public int total_size;
     };
 
     enum InputType
@@ -209,8 +76,9 @@ namespace SymbolSort
 
     class InputFile
     {
-        public string       filename;
-        public InputType    type;
+        public string filename;
+        public InputType type;
+
         public InputFile(string filename, InputType type)
         {
             this.filename = filename;
@@ -220,8 +88,8 @@ namespace SymbolSort
 
     class RegexReplace
     {
-        public Regex   regex;
-        public string  replacement;
+        public Regex regex;
+        public string replacement;
     }
 
     class SymbolSort
@@ -232,29 +100,39 @@ namespace SymbolSort
             {
                 input = regReplace.regex.Replace(input, regReplace.replacement);
             }
+
             return input;
         }
 
         private static string PathCanonicalize(string path)
         {
-            if (path.Length == 0)
+            if (string.IsNullOrEmpty(path))
+            {
                 return path;
+            }
 
             string[] dirs = path.Split("/\\".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             List<string> outDirs = new List<string>();
             int skipCount = 0;
-            for (int i=dirs.Length-1; i>=0; --i)
+            for (int i = dirs.Length - 1; i >= 0; --i)
             {
                 string dir = dirs[i];
                 if (dir == ".")
                 {
+                    continue;
                 }
                 else if (dir == "..")
+                {
                     ++skipCount;
+                }
                 else if (skipCount > 0)
+                {
                     --skipCount;
+                }
                 else
+                {
                     outDirs.Add(dir);
+                }
             }
 
             string outPath = "";
@@ -268,13 +146,13 @@ namespace SymbolSort
                 outPath += "..\\";
             }
 
-            for (int i=outDirs.Count-1; i>=0; --i)
+            for (int i = outDirs.Count - 1; i >= 0; --i)
             {
                 outPath += outDirs[i];
                 outPath += "\\";
             }
 
-            if (outPath.Length > 1 && path[path.Length-1] != '\\' && path[path.Length-1] != '/')
+            if (outPath.Length > 1 && path[path.Length - 1] != '\\' && path[path.Length - 1] != '/')
             {
                 outPath = outPath.Remove(outPath.Length - 1);
             }
@@ -316,10 +194,8 @@ namespace SymbolSort
             return ungrouped_name;
         }
 
-        private static void ParseBsdSymbol(string line, out Symbol symbol)
+        private static Symbol ParseBsdSymbol(string line)
         {
-            symbol = null;
-
             int rva = 0;
             int size = 0;
             string name;
@@ -328,14 +204,14 @@ namespace SymbolSort
 
             string[] tokens = line.Split((char[])null, 2, StringSplitOptions.RemoveEmptyEntries);
             if (tokens.Length < 2)
-                return;
+                return null;
 
             if (tokens[0].Length > 1)
             {
                 rva = Int32.Parse(tokens[0], NumberStyles.AllowHexSpecifier);
                 tokens = tokens[1].Split((char[])null, 2, StringSplitOptions.RemoveEmptyEntries);
                 if (tokens.Length < 2)
-                    return;
+                    return null;
             }
 
             if (tokens[0].Length > 1)
@@ -346,16 +222,18 @@ namespace SymbolSort
                 }
                 catch (System.Exception)
                 {
+                    // @todo Log
                 }
+
                 tokens = tokens[1].Split((char[])null, 2, StringSplitOptions.RemoveEmptyEntries);
                 if (tokens.Length < 2)
-                    return;
+                    return null;
             }
 
             section = tokens[0];
             tokens = tokens[1].Split("\t\r\n".ToCharArray(), 2, StringSplitOptions.RemoveEmptyEntries);
             if (tokens.Length < 1)
-                return;
+                return null;
 
             name = tokens[0];
             if (tokens.Length > 1)
@@ -363,21 +241,21 @@ namespace SymbolSort
                 sourceFilename = tokens[1];
             }
 
-            symbol = new Symbol();
-            symbol.name = name;
-            symbol.short_name = name;
-            symbol.rva_start = rva;
-            symbol.rva_end = rva + size;
-            symbol.size = size;
-            symbol.count = 1;
-            symbol.section = section;
-            symbol.source_filename = sourceFilename;
+            return new Symbol
+            {
+                name = name,
+                short_name = name,
+                rva_start = rva,
+                rva_end = rva + size,
+                size = size,
+                count = 1,
+                section = section,
+                source_filename = sourceFilename
+            };
         }
 
-        private static void ParseSysvSymbol(string line, out Symbol symbol)
+        private static Symbol ParseSysvSymbol(string line)
         {
-            symbol = null;
-
             // nm sysv output has the following 7 fields separated by '|': Name, Value, Class, Type, Size, Line, Section
             // Name could contain | when operator| or operator|| are overloaded and Section could contain | chars in a path
             line = line.Replace("operator|(", ">>operatorBitwiseOr<<");
@@ -385,12 +263,16 @@ namespace SymbolSort
 
             string[] tokens = line.Split("|".ToCharArray(), 7, StringSplitOptions.None);
             if (tokens.Length < 7)
-                return;
+            {
+                return null;
+            }
+
             tokens[0] = tokens[0].Replace(">>operatorBitwiseOr<<", "operator|(");
             tokens[0] = tokens[0].Replace(">>operatorLogicalOr<<", "operator||(");
 
             int rva = 0;
             int size = 0;
+
             string name;
             string section = "";
             string sourceFilename = "";
@@ -401,6 +283,7 @@ namespace SymbolSort
             {
                 rva = Int32.Parse(tokens[1], NumberStyles.AllowHexSpecifier);
             }
+
             if (tokens[4].Trim().Length > 0)
             {
                 try
@@ -409,27 +292,32 @@ namespace SymbolSort
                 }
                 catch (System.Exception)
                 {
+                    // @todo Log
                 }
             }
+
             tokens = tokens[6].Split("\t\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             if (tokens.Length > 0)
             {
                 section = tokens[0].Trim();
             }
+
             if (tokens.Length > 1)
             {
                 sourceFilename = tokens[1].Trim();
             }
 
-            symbol = new Symbol();
-            symbol.name = name;
-            symbol.short_name = name;
-            symbol.rva_start = rva;
-            symbol.rva_end = rva + size;
-            symbol.size = size;
-            symbol.count = 1;
-            symbol.section = section;
-            symbol.source_filename = sourceFilename;
+            return new Symbol
+            {
+                name = name,
+                short_name = name,
+                rva_start = rva,
+                rva_end = rva + size,
+                size = size,
+                count = 1,
+                section = section,
+                source_filename = sourceFilename
+            };
         }
 
         private static void ReadSymbolsFromNM(List<Symbol> symbols, string inFilename, InputType inType)
@@ -449,50 +337,58 @@ namespace SymbolSort
                     Console.Write("{0,3}\b\b\b", percentComplete);
                 }
 
-                string ln;
+                string line;
                 do
                 {
-                    ln = reader.ReadLine();
+                    line = reader.ReadLine();
                 }
-                while (!reader.EndOfStream && ln == "");
+                while (!reader.EndOfStream && line == "");
 
-                Symbol symbol = null;
                 if (inType == InputType.nm_bsd)
                 {
-                    ParseBsdSymbol(ln, out symbol);
+                    var symbol = ParseBsdSymbol(line);
+                    if (symbol != null)
+                    {
+                        symbols.Add(symbol);
+                    }
                 }
                 else if (inType == InputType.nm_sysv)
                 {
-                    ParseSysvSymbol(ln, out symbol);
+                    var symbol = ParseSysvSymbol(line);
+                    if (symbol != null)
+                    {
+                        symbols.Add(symbol);
+                    }
                 }
-
-                if (symbol != null)
+                else
                 {
-                    symbols.Add(symbol);
+                    Debug.Assert(false);
                 }
             }
 
             Console.WriteLine("{0,3}", 100);
-
             Console.WriteLine("Cleaning up paths...");
+
             HashSet<string> rootPaths = new HashSet<string>();
             foreach (Symbol s in symbols)
             {
-                if (s.source_filename.Length > 0)
+                if (string.IsNullOrEmpty(s.source_filename))
                 {
-                    int lineNumberLoc = s.source_filename.LastIndexOf(':');
-                    if (lineNumberLoc > 0)
-                    {
-                        s.source_filename = s.source_filename.Substring(0, lineNumberLoc);
-                    }
+                    continue;
+                }
 
-                    if (Path.IsPathRooted(s.source_filename))
-                    {
-                        string canonicalPath = PathCanonicalize(s.source_filename);
-                        canonicalPath = canonicalPath.ToLower();
-                        s.source_filename = canonicalPath;
-                        rootPaths.Add(Path.GetDirectoryName(canonicalPath));
-                    }
+                int lineNumberLoc = s.source_filename.LastIndexOf(':');
+                if (lineNumberLoc > 0)
+                {
+                    s.source_filename = s.source_filename.Substring(0, lineNumberLoc);
+                }
+
+                if (Path.IsPathRooted(s.source_filename))
+                {
+                    string canonicalPath = PathCanonicalize(s.source_filename);
+                    canonicalPath = canonicalPath.ToLower();
+                    s.source_filename = canonicalPath;
+                    rootPaths.Add(Path.GetDirectoryName(canonicalPath));
                 }
             }
 
@@ -614,43 +510,49 @@ namespace SymbolSort
 
         private static string FindSourceFileForRVA(IDiaSession session, uint rva, uint rvaLength)
         {
-            IDiaEnumLineNumbers enumLineNumbers;
-            session.findLinesByRVA(rva, rvaLength, out enumLineNumbers);
-            if (enumLineNumbers != null)
+            session.findLinesByRVA(rva, rvaLength, out IDiaEnumLineNumbers enumLineNumbers);
+            if (enumLineNumbers == null)
             {
-                for ( ; ; )
-                {
-                    uint numFetched = 1;
-                    IDiaLineNumber lineNumber;
-                    enumLineNumbers.Next(numFetched, out lineNumber, out numFetched);
-                    if (lineNumber == null || numFetched < 1)
-                        break;
+                return string.Empty;
+            }
 
-                    IDiaSourceFile sourceFile = lineNumber.sourceFile;
-                    if (sourceFile != null)
-                    {
-                        return sourceFile.fileName.ToLower();
-                    }
+            for (;;)
+            {
+                uint numFetched = 1;
+                enumLineNumbers.Next(numFetched, out IDiaLineNumber lineNumber, out numFetched);
+                if (lineNumber == null || numFetched < 1)
+                {
+                    break;
+                }
+
+                IDiaSourceFile sourceFile = lineNumber.sourceFile;
+                if (sourceFile != null)
+                {
+                    return sourceFile.fileName.ToLower();
                 }
             }
-            return "";
-        }
 
+            return string.Empty;
+        }
 
         private static IDiaEnumSectionContribs GetEnumSectionContribs(IDiaSession session)
         {
-            IDiaEnumTables tableEnum;
-            session.getEnumTables(out tableEnum);
+            session.getEnumTables(out IDiaEnumTables tableEnum);
 
-            for ( ; ; )
+            for (;;)
             {
                 uint numFetched = 1;
                 IDiaTable table = null;
                 tableEnum.Next(numFetched, ref table, ref numFetched);
                 if (table == null || numFetched < 1)
+                {
                     break;
+                }
+
                 if (table is IDiaEnumSectionContribs)
+                {
                     return table as IDiaEnumSectionContribs;
+                }
             }
 
             return null;
@@ -658,14 +560,14 @@ namespace SymbolSort
 
         private static void ReadSectionHeadersAsSymbols(IDiaEnumDebugStreamSectionHeaders enumSectionHeaders, List<Symbol> symbols)
         {
-            for (; ; )
+            for (;;)
             {
                 uint numFetched = 1;
-                uint bytesRead = 0;
-                ImageSectionHeader imageSectionHeader;
-                enumSectionHeaders.Next(numFetched, (uint)Marshal.SizeOf(typeof(ImageSectionHeader)), out bytesRead, out imageSectionHeader, out numFetched);
+                enumSectionHeaders.Next(numFetched, (uint)Marshal.SizeOf(typeof(ImageSectionHeader)), out uint bytesRead, out ImageSectionHeader imageSectionHeader, out numFetched);
                 if (numFetched < 1 || bytesRead != Marshal.SizeOf(typeof(ImageSectionHeader)))
+                {
                     break;
+                }
 
                 if ((imageSectionHeader.Characteristics & DataSectionFlags.MemDiscardable) != DataSectionFlags.MemDiscardable)
                 {
@@ -689,7 +591,7 @@ namespace SymbolSort
             IDiaEnumDebugStreams streamEnum;
             session.getEnumDebugStreams(out streamEnum);
 
-            for (; ; )
+            for (;;)
             {
                 uint numFetched = 1;
                 IDiaEnumDebugStreamData enumStreamData = null;
@@ -702,7 +604,6 @@ namespace SymbolSort
                     ReadSectionHeadersAsSymbols((IDiaEnumDebugStreamSectionHeaders)enumStreamData, symbols);
                 }
             }
-
         }
 
         private enum SourceFileType
@@ -711,6 +612,7 @@ namespace SymbolSort
             unknown,
             h
         };
+
         private static SourceFileType GetSourceFileType(string filename)
         {
             try
@@ -724,70 +626,77 @@ namespace SymbolSort
             }
             catch (ArgumentException)
             {
+                // @todo Log
             }
-            return SourceFileType.unknown;
 
+            return SourceFileType.unknown;
         }
+
         private static string FindBestSourceFileForCompiland(IDiaSession session, IDiaSymbol compiland, Dictionary<string, int> sourceFileUsage)
         {
+            session.findFile(compiland, null, 0, out IDiaEnumSourceFiles enumSourceFiles);
+
             string bestSourceFileName = "";
-            IDiaEnumSourceFiles enumSourceFiles;
-            session.findFile(compiland, null, 0, out enumSourceFiles);
-            if (enumSourceFiles != null)
+            if (enumSourceFiles == null)
             {
-                int bestSourceFileCount = int.MaxValue;
-                SourceFileType bestSourceFileType = SourceFileType.h;
+                return bestSourceFileName.ToLower();
+            }
 
+            int bestSourceFileCount = int.MaxValue;
+            SourceFileType bestSourceFileType = SourceFileType.h;
 
-                for ( ; ; )
+            for (;;)
+            {
+                uint numFetched = 1;
+                enumSourceFiles.Next(numFetched, out IDiaSourceFile sourceFile, out numFetched);
+                if (sourceFile == null || numFetched < 1)
+                    break;
+
+                int usage = sourceFileUsage[sourceFile.fileName];
+                if (usage < bestSourceFileCount)
                 {
-                    IDiaSourceFile sourceFile;
-                    uint numFetched = 1;
-                    enumSourceFiles.Next(numFetched, out sourceFile, out numFetched);
-                    if (sourceFile == null || numFetched < 1)
-                        break;
-                    int usage = sourceFileUsage[sourceFile.fileName];
-                    if (usage < bestSourceFileCount)
+                    bestSourceFileName = sourceFile.fileName;
+                    bestSourceFileType = GetSourceFileType(sourceFile.fileName);
+                    bestSourceFileCount = usage;
+                }
+                else if (usage == bestSourceFileCount && bestSourceFileType != SourceFileType.cpp)
+                {
+                    SourceFileType type = GetSourceFileType(sourceFile.fileName);
+                    if (type < bestSourceFileType)
                     {
                         bestSourceFileName = sourceFile.fileName;
-                        bestSourceFileType = GetSourceFileType(sourceFile.fileName);
-                        bestSourceFileCount = usage;
-                    }
-                    else if (usage == bestSourceFileCount && bestSourceFileType != SourceFileType.cpp)
-                    {
-                        SourceFileType type = GetSourceFileType(sourceFile.fileName);
-                        if (type < bestSourceFileType)
-                        {
-                            bestSourceFileName = sourceFile.fileName;
-                            bestSourceFileType = type;
-                        }
+                        bestSourceFileType = type;
                     }
                 }
             }
+
             return bestSourceFileName.ToLower();
         }
 
         private static IDiaSectionContrib FindSectionContribForRVA(int rva, List<IDiaSectionContrib> sectionContribs)
         {
-            int i0 = 0, i1 = sectionContribs.Count;
-            while (i0 < i1)
+            int left = 0;
+            int right = sectionContribs.Count;
+
+            while (left < right)
             {
-                int i = (i1 + i0) / 2;
-                if (sectionContribs[i].relativeVirtualAddress > rva)
+                int middle = (right + left) / 2;
+                if (sectionContribs[middle].relativeVirtualAddress > rva)
                 {
-                    i1 = i;
+                    right = middle;
                 }
-                else if (sectionContribs[i].relativeVirtualAddress + sectionContribs[i].length <= rva)
+                else if (sectionContribs[middle].relativeVirtualAddress + sectionContribs[middle].length <= rva)
                 {
-                    i0 = i+1;
+                    left = middle + 1;
                 }
                 else
                 {
-                    return sectionContribs[i];
+                    return sectionContribs[middle];
                 }
             }
+
             return null;
-       }
+        }
 
         private static void BuildCompilandFileMap(IDiaSession session, Dictionary<uint, string> compilandFileMap)
         {
@@ -795,52 +704,55 @@ namespace SymbolSort
 
             Dictionary<string, int> sourceFileUsage = new Dictionary<string, int>();
             {
-                IDiaEnumSymbols enumSymbols;
-                globalScope.findChildren(Dia2Lib.SymTagEnum.SymTagCompiland, null, 0, out enumSymbols);
+                globalScope.findChildren(Dia2Lib.SymTagEnum.SymTagCompiland, null, 0, out IDiaEnumSymbols enumSymbols);
 
-                for (; ; )
+                for (;;)
                 {
                     uint numFetched = 1;
-                    IDiaSymbol compiland;
-                    enumSymbols.Next(numFetched, out compiland, out numFetched);
+                    enumSymbols.Next(numFetched, out IDiaSymbol compiland, out numFetched);
                     if (compiland == null || numFetched < 1)
-                        break;
-
-                    IDiaEnumSourceFiles enumSourceFiles;
-                    session.findFile(compiland, null, 0, out enumSourceFiles);
-                    if (enumSourceFiles != null)
                     {
-                        for (; ; )
+                        break;
+                    }
+
+                    session.findFile(compiland, null, 0, out IDiaEnumSourceFiles enumSourceFiles);
+                    if (enumSourceFiles == null)
+                    {
+                        continue;
+                    }
+
+                    for (;;)
+                    {
+                        uint numFetched2 = 1;
+                        enumSourceFiles.Next(numFetched2, out IDiaSourceFile sourceFile, out numFetched2);
+                        if (sourceFile == null || numFetched2 < 1)
                         {
-                            IDiaSourceFile sourceFile;
-                            uint numFetched2 = 1;
-                            enumSourceFiles.Next(numFetched2, out sourceFile, out numFetched2);
-                            if (sourceFile == null || numFetched2 < 1)
-                                break;
-                            if (sourceFileUsage.ContainsKey(sourceFile.fileName))
-                            {
-                                sourceFileUsage[sourceFile.fileName]++;
-                            }
-                            else
-                            {
-                                sourceFileUsage.Add(sourceFile.fileName, 1);
-                            }
+                            break;
+                        }
+
+                        if (sourceFileUsage.ContainsKey(sourceFile.fileName))
+                        {
+                            sourceFileUsage[sourceFile.fileName]++;
+                        }
+                        else
+                        {
+                            sourceFileUsage.Add(sourceFile.fileName, 1);
                         }
                     }
                 }
             }
 
             {
-                IDiaEnumSymbols enumSymbols;
-                globalScope.findChildren(Dia2Lib.SymTagEnum.SymTagCompiland, null, 0, out enumSymbols);
+                globalScope.findChildren(Dia2Lib.SymTagEnum.SymTagCompiland, null, 0, out IDiaEnumSymbols enumSymbols);
 
-                for (; ; )
+                for (;;)
                 {
                     uint numFetched = 1;
-                    IDiaSymbol compiland;
-                    enumSymbols.Next(numFetched, out compiland, out numFetched);
+                    enumSymbols.Next(numFetched, out IDiaSymbol compiland, out numFetched);
                     if (compiland == null || numFetched < 1)
+                    {
                         break;
+                    }
 
                     compilandFileMap.Add(compiland.symIndexId, FindBestSourceFileForCompiland(session, compiland, sourceFileUsage));
                 }
@@ -849,28 +761,24 @@ namespace SymbolSort
 
         private static void BuildSectionContribTable(IDiaSession session, List<IDiaSectionContrib> sectionContribs)
         {
+            IDiaEnumSectionContribs enumSectionContribs = GetEnumSectionContribs(session);
+            if (enumSectionContribs != null)
             {
-                IDiaEnumSectionContribs enumSectionContribs = GetEnumSectionContribs(session);
-                if (enumSectionContribs != null)
+                for (;;)
                 {
-                    for (; ; )
+                    uint numFetched = 1;
+                    enumSectionContribs.Next(numFetched, out IDiaSectionContrib diaSectionContrib, out numFetched);
+                    if (diaSectionContrib == null || numFetched < 1)
                     {
-                        uint numFetched = 1;
-                        IDiaSectionContrib diaSectionContrib;
-                        enumSectionContribs.Next(numFetched, out diaSectionContrib, out numFetched);
-                        if (diaSectionContrib == null || numFetched < 1)
-                            break;
-
-                        sectionContribs.Add(diaSectionContrib);
-
+                        break;
                     }
+
+                    sectionContribs.Add(diaSectionContrib);
+
                 }
             }
-            sectionContribs.Sort(
-                delegate(IDiaSectionContrib s0, IDiaSectionContrib s1)
-                {
-                    return (int)s0.relativeVirtualAddress - (int)s1.relativeVirtualAddress;
-                } );
+
+            sectionContribs.Sort((lhs, rhs) => (int)lhs.relativeVirtualAddress - (int)rhs.relativeVirtualAddress);
         }
 
         private static void ReadSymbolsFromScope(IDiaSymbol parent, Dia2Lib.SymTagEnum type, SymbolFlags additionalFlags, uint startPercent, uint endPercent, IDiaSession diaSession, List<IDiaSectionContrib> sectionContribs, Dictionary<uint, string> compilandFileMap, List<Symbol> symbols)
@@ -883,7 +791,7 @@ namespace SymbolSort
             uint percentComplete = startPercent;
 
             Console.Write("{0,3}% complete\b\b\b\b\b\b\b\b\b\b\b\b\b", percentComplete);
-            for (; ; )
+            for (;;)
             {
                 uint numFetched = 1;
                 IDiaSymbol diaSymbol;
@@ -912,12 +820,15 @@ namespace SymbolSort
                         continue;
                 }
 
-                Symbol symbol = new Symbol();
-                symbol.count = 1;
-                symbol.rva_start = (int)diaSymbol.relativeVirtualAddress;
-                symbol.short_name = diaSymbol.name == null ? "" : diaSymbol.name;
-                symbol.name = diaSymbol.undecoratedName == null ? symbol.short_name : diaSymbol.undecoratedName;
-                symbol.flags = additionalFlags;
+                Symbol symbol = new Symbol
+                {
+                    count = 1,
+                    rva_start = (int)diaSymbol.relativeVirtualAddress,
+                    short_name = diaSymbol.name ?? "",
+                    name = diaSymbol.undecoratedName ?? diaSymbol.name ?? "",
+                    flags = additionalFlags
+                };
+
                 switch (type)
                 {
                     case SymTagEnum.SymTagData:
@@ -993,20 +904,21 @@ namespace SymbolSort
 
         private static void ReadSymbolsFromCompilands(IDiaSymbol parent, Dia2Lib.SymTagEnum type, SymbolFlags additionalFlags, IDiaSession diaSession, List<IDiaSectionContrib> sectionContribs, Dictionary<uint, string> compilandFileMap, List<Symbol> symbols)
         {
-            IDiaEnumSymbols enumSymbols;
-            parent.findChildren(SymTagEnum.SymTagCompiland, null, 0, out enumSymbols);
+            parent.findChildren(SymTagEnum.SymTagCompiland, null, 0, out IDiaEnumSymbols enumSymbols);
 
             uint numSymbols = (uint)enumSymbols.count;
             uint symbolsRead = 0;
             uint percentComplete = 0;
 
-            for (; ; )
+            for (;;)
             {
                 uint numFetched = 1;
-                IDiaSymbol diaSymbol;
-                enumSymbols.Next(numFetched, out diaSymbol, out numFetched);
+                enumSymbols.Next(numFetched, out IDiaSymbol diaSymbol, out numFetched);
+
                 if (diaSymbol == null || numFetched < 1)
+                {
                     break;
+                }
 
                 uint newPercentComplete = 100 * ++symbolsRead / numSymbols;
                 ReadSymbolsFromScope(diaSymbol, type, additionalFlags, percentComplete, newPercentComplete, diaSession, sectionContribs, compilandFileMap, symbols);
@@ -1018,12 +930,14 @@ namespace SymbolSort
         {
             if (symbols.Count > 0)
             {
-                symbols.Sort(delegate(Symbol x, Symbol y) {
+                symbols.Sort(delegate (Symbol x, Symbol y)
+                {
                     if (x.rva_start != y.rva_start)
                         return x.rva_start - y.rva_start;
 
                     return x.name.CompareTo(y.name);
                 });
+
                 int highWaterMark = symbols[0].rva_start;
                 for (int i = 0, count = symbols.Count; i < count; ++i)
                 {
@@ -1040,6 +954,7 @@ namespace SymbolSort
                         emptySymbol.section = "";
                         emptySymbol.source_filename = "";
                         emptySymbol.flags |= SymbolFlags.Unmapped;
+
                         symbols.Add(emptySymbol);
                     }
                     highWaterMark = Math.Max(highWaterMark, s.rva_end);
@@ -1064,14 +979,14 @@ namespace SymbolSort
         private static void RemoveOverlappingSymbols(List<Symbol> symbols, bool fillMissingAddresses)
         {
             var symbolExtents = new List<SymbolExtent>();
-            for (int i = 0; i<symbols.Count; ++i)
+            for (int i = 0; i < symbols.Count; ++i)
             {
                 var s = symbols[i];
                 symbolExtents.Add(new SymbolExtent(s, ~i));
                 symbolExtents.Add(new SymbolExtent(s, i));
             }
 
-            symbolExtents.Sort(delegate(SymbolExtent s0, SymbolExtent s1) { return s0.loc == s1.loc ? s0.priority - s1.priority : s0.loc - s1.loc; });
+            symbolExtents.Sort(delegate (SymbolExtent s0, SymbolExtent s1) { return s0.loc == s1.loc ? s0.priority - s1.priority : s0.loc - s1.loc; });
 
             var openSymbols = new List<SymbolExtent>();
             int lastExtent = 0;
@@ -1096,6 +1011,7 @@ namespace SymbolSort
                         emptySymbol.section = "";
                         emptySymbol.source_filename = "";
                         emptySymbol.flags |= SymbolFlags.Unmapped;
+
                         symbols.Add(emptySymbol);
                     }
 
@@ -1122,7 +1038,7 @@ namespace SymbolSort
                 {
                     maxOpenPriority = int.MinValue;
                     int numRemoved = openSymbols.RemoveAll(
-                        delegate(SymbolExtent x)
+                        delegate (SymbolExtent x)
                         {
                             if (x.symbol == se.symbol)
                             {
@@ -1153,8 +1069,7 @@ namespace SymbolSort
                 diaSource.loadDataForExe(filename, searchPath, null);
             }
 
-            IDiaSession diaSession;
-            diaSource.openSession(out diaSession);
+            diaSource.openSession(out IDiaSession diaSession);
 
             Console.WriteLine("Reading section info...");
             List<IDiaSectionContrib> sectionContribs = new List<IDiaSectionContrib>();
@@ -1219,7 +1134,7 @@ namespace SymbolSort
                 Console.Write("Subtracting overlapping symbols... ");
                 RemoveOverlappingSymbols(symbols, true);
                 Console.WriteLine("{0,3}", 100);
-                symbols.RemoveAll(delegate(Symbol s) { return s.size == 0 && ((s.flags & SymbolFlags.Weak) == SymbolFlags.Weak); });
+                symbols.RemoveAll(delegate (Symbol s) { return s.size == 0 && ((s.flags & SymbolFlags.Weak) == SymbolFlags.Weak); });
             }
         }
 
@@ -1302,7 +1217,7 @@ namespace SymbolSort
             {
                 string filename = s.source_filename;
                 filename = PerformRegexReplacements(filename, pathReplacements);
-                for ( ; ; )
+                for (;;)
                 {
                     SymbolSourceStats stat;
                     if (sourceStats.ContainsKey(filename))
@@ -1331,10 +1246,10 @@ namespace SymbolSort
 
             List<KeyValuePair<string, SymbolSourceStats>> sortedStats = sourceStats.ToList();
             sortedStats.Sort(
-                delegate(KeyValuePair<string, SymbolSourceStats> s0, KeyValuePair<string, SymbolSourceStats> s1)
+                delegate (KeyValuePair<string, SymbolSourceStats> s0, KeyValuePair<string, SymbolSourceStats> s1)
                 {
                     return s1.Value.size - s0.Value.size;
-                } );
+                });
 
             writer.WriteLine("File Contributions");
             writer.WriteLine("--------------------------------------");
@@ -1343,13 +1258,13 @@ namespace SymbolSort
             {
                 writer.WriteLine("Increases in Size");
                 WriteSourceStatsList(writer, sortedStats, maxCount,
-                    delegate(SymbolSourceStats s)
+                    delegate (SymbolSourceStats s)
                     {
                         return !s.singleChild && s.size > 0;
                     });
                 writer.WriteLine("Decreases in Size");
                 WriteSourceStatsList(writer, CreateReverseIterator(sortedStats), maxCount,
-                    delegate(SymbolSourceStats s)
+                    delegate (SymbolSourceStats s)
                     {
                         return !s.singleChild && s.size < 0;
                     });
@@ -1358,7 +1273,7 @@ namespace SymbolSort
             {
                 writer.WriteLine("Sorted by Size");
                 WriteSourceStatsList(writer, sortedStats, maxCount,
-                    delegate(SymbolSourceStats s)
+                    delegate (SymbolSourceStats s)
                     {
                         return !s.singleChild;
                     });
@@ -1366,10 +1281,10 @@ namespace SymbolSort
 
 
             sortedStats.Sort(
-                delegate(KeyValuePair<string, SymbolSourceStats> s0, KeyValuePair<string, SymbolSourceStats> s1)
+                delegate (KeyValuePair<string, SymbolSourceStats> s0, KeyValuePair<string, SymbolSourceStats> s1)
                 {
                     return String.Compare(s0.Key, s1.Key);
-                } );
+                });
             writer.WriteLine("Sorted by Path");
             writer.WriteLine("{0,12}{1,8}  {2}", "Size", "Count", "Source Path");
             foreach (KeyValuePair<string, SymbolSourceStats> s in sortedStats)
@@ -1423,7 +1338,7 @@ namespace SymbolSort
 
             {
                 mergedSymbols.Sort(
-                    delegate(MergedSymbol s0, MergedSymbol s1)
+                    delegate (MergedSymbol s0, MergedSymbol s1)
                     {
                         if (s0.total_count != s1.total_count)
                             return s1.total_count - s0.total_count;
@@ -1432,37 +1347,37 @@ namespace SymbolSort
                             return s1.total_size - s0.total_size;
 
                         return s0.id.CompareTo(s1.id);
-                    } );
+                    });
 
                 if (showDifferences)
                 {
                     writer.WriteLine("Increases in Total Count");
                     WriteMergedSymbolList(writer, mergedSymbols, maxCount,
-                        delegate(MergedSymbol s)
+                        delegate (MergedSymbol s)
                         {
                             return s.total_count > 0;
-                        } );
+                        });
                     writer.WriteLine("Decreases in Total Count");
                     WriteMergedSymbolList(writer, CreateReverseIterator(mergedSymbols), maxCount,
-                        delegate(MergedSymbol s)
+                        delegate (MergedSymbol s)
                         {
                             return s.total_count < 0;
-                        } );
+                        });
                 }
                 else
                 {
                     writer.WriteLine("Sorted by Total Count");
-                    WriteMergedSymbolList(writer, mergedSymbols, maxCount, 
-                        delegate(MergedSymbol s)
+                    WriteMergedSymbolList(writer, mergedSymbols, maxCount,
+                        delegate (MergedSymbol s)
                         {
                             return s.total_count != 1;
-                        } );
+                        });
                 }
             }
 
             {
                 mergedSymbols.Sort(
-                    delegate(MergedSymbol s0, MergedSymbol s1)
+                    delegate (MergedSymbol s0, MergedSymbol s1)
                     {
                         if (s0.total_size != s1.total_size)
                             return s1.total_size - s0.total_size;
@@ -1471,19 +1386,19 @@ namespace SymbolSort
                             return s1.total_count - s0.total_count;
 
                         return s0.id.CompareTo(s1.id);
-                    } );
+                    });
 
                 if (showDifferences)
                 {
                     writer.WriteLine("Increases in Total Size");
                     WriteMergedSymbolList(writer, mergedSymbols, maxCount,
-                        delegate(MergedSymbol s)
+                        delegate (MergedSymbol s)
                         {
                             return s.total_size > 0;
                         });
                     writer.WriteLine("Decreases in Total Size");
                     WriteMergedSymbolList(writer, CreateReverseIterator(mergedSymbols), maxCount,
-                        delegate(MergedSymbol s)
+                        delegate (MergedSymbol s)
                         {
                             return s.total_size < 0;
                         });
@@ -1492,7 +1407,7 @@ namespace SymbolSort
                 {
                     writer.WriteLine("Sorted by Total Size");
                     WriteMergedSymbolList(writer, mergedSymbols, maxCount,
-                        delegate(MergedSymbol s)
+                        delegate (MergedSymbol s)
                         {
                             return s.total_count != 1;
                         });
@@ -1514,18 +1429,18 @@ namespace SymbolSort
                     break;
                 case InputType.nm_bsd:
                 case InputType.nm_sysv:
-                    ReadSymbolsFromNM(symbols , inputFile.filename, inputFile.type);
+                    ReadSymbolsFromNM(symbols, inputFile.filename, inputFile.type);
                     break;
             }
         }
 
         private static bool ParseArgs(
-            string[] args, 
-            out List<InputFile> inputFiles, 
-            out string outFilename, 
+            string[] args,
+            out List<InputFile> inputFiles,
+            out string outFilename,
             out List<InputFile> differenceFiles,
             out string searchPath,
-            out int maxCount, 
+            out int maxCount,
             out List<string> exclusions,
             out List<RegexReplace> pathReplacements,
             out Options options)
@@ -1794,7 +1709,7 @@ namespace SymbolSort
             {
                 Console.WriteLine("Removing Exclusions...");
                 symbols.RemoveAll(
-                    delegate(Symbol s)
+                    delegate (Symbol s)
                     {
                         foreach (string e in exclusions)
                         {
@@ -1821,7 +1736,7 @@ namespace SymbolSort
                 if (unknownSize > 0 &&
                     (options & Options.IncludeUnmappedAddresses) != Options.IncludeUnmappedAddresses)
                 {
-                    symbols.RemoveAll(delegate(Symbol s) { return (s.flags & SymbolFlags.Unmapped) == SymbolFlags.Unmapped; });
+                    symbols.RemoveAll(delegate (Symbol s) { return (s.flags & SymbolFlags.Unmapped) == SymbolFlags.Unmapped; });
                 }
 
                 if (differenceFiles.Any())
@@ -1846,7 +1761,7 @@ namespace SymbolSort
                     }
                     writer.WriteLine("--------------------------------------");
                     symbols.Sort(
-                        delegate(Symbol s0, Symbol s1)
+                        delegate (Symbol s0, Symbol s1)
                         {
                             if (s1.size != s0.size)
                                 return s1.size - s0.size;
@@ -1866,7 +1781,7 @@ namespace SymbolSort
             DumpMergedSymbols(
                 writer,
                 symbols,
-                delegate(Symbol s)
+                delegate (Symbol s)
                 {
                     return new string[] { s.section };
                 },
@@ -1878,7 +1793,7 @@ namespace SymbolSort
             DumpMergedSymbols(
                 writer,
                 symbols,
-                delegate(Symbol s)
+                delegate (Symbol s)
                 {
                     return new string[] { s.name };
                 },
@@ -1890,7 +1805,7 @@ namespace SymbolSort
             DumpMergedSymbols(
                 writer,
                 symbols,
-                delegate(Symbol s)
+                delegate (Symbol s)
                 {
                     string n = s.name;
                     n = ExtractGroupedSubstrings(n, '<', '>', "T");
@@ -1905,7 +1820,7 @@ namespace SymbolSort
             DumpMergedSymbols(
                 writer,
                 symbols,
-                delegate(Symbol s)
+                delegate (Symbol s)
                 {
                     string n = s.short_name;
                     n = ExtractGroupedSubstrings(n, '<', '>', "T");
@@ -1921,7 +1836,7 @@ namespace SymbolSort
             DumpMergedSymbols(
                 writer,
                 symbols,
-                delegate(Symbol s)
+                delegate (Symbol s)
                 {
                     return s.name.Split(" ,.&*()<>:'`".ToArray(), StringSplitOptions.RemoveEmptyEntries);
                 },
@@ -1932,7 +1847,7 @@ namespace SymbolSort
             {
                 Console.WriteLine("Dumping all symbols...");
                 symbols.Sort(
-                    delegate(Symbol x, Symbol y)
+                    delegate (Symbol x, Symbol y)
                     {
                         if (x.rva_start != y.rva_start)
                             return x.rva_start - y.rva_start;

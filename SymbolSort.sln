@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SymbolSort", "SymbolSort.csproj", "{8F244FB4-27B7-4E56-A116-1B871B35DF31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "UI\UI.csproj", "{2C68A382-3176-44FB-861A-F468F2722E21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +17,15 @@ Global
 		{8F244FB4-27B7-4E56-A116-1B871B35DF31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F244FB4-27B7-4E56-A116-1B871B35DF31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F244FB4-27B7-4E56-A116-1B871B35DF31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C68A382-3176-44FB-861A-F468F2722E21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C68A382-3176-44FB-861A-F468F2722E21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C68A382-3176-44FB-861A-F468F2722E21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C68A382-3176-44FB-861A-F468F2722E21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0C3E2656-5645-4F1A-AEF3-CF5E803412A3}
 	EndGlobalSection
 EndGlobal

@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugInterfaceAccess.cs" />
+    <Compile Include="SymbolParsers.cs" />
     <Compile Include="SymbolSort.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

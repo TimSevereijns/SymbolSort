@@ -5,8 +5,83 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="MainWindow" Height="720" Width="1280">
+
+   <Window.Resources>
+      <DataTemplate x:Key="HeaderTemplateArrowUp">
+         <DockPanel LastChildFill="True" Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}">
+            <Path x:Name="arrowUp" StrokeThickness="1" Fill="Gray" Data="M 5,10 L 15,10 L 10,5 L 5,10" DockPanel.Dock="Right" Width="20" HorizontalAlignment="Right" Margin="5,0,5,0" SnapsToDevicePixels="True"/>
+            <TextBlock Text="{Binding }" />
+         </DockPanel>
+      </DataTemplate>
+
+      <DataTemplate x:Key="HeaderTemplateArrowDown">
+         <DockPanel LastChildFill="True" Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}">
+            <Path x:Name="arrowDown" StrokeThickness="1" Fill="Gray"  Data="M 5,5 L 10,10 L 15,5 L 5,5" DockPanel.Dock="Right" Width="20" HorizontalAlignment="Right" Margin="5,0,5,0" SnapsToDevicePixels="True"/>
+            <TextBlock Text="{Binding }" />
+         </DockPanel>
+      </DataTemplate>
+   </Window.Resources>
+
+   <Grid>
+      <DockPanel>
+         <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+               <MenuItem Header="_Open"/>
+               <MenuItem Header="_Close"/>
+               <MenuItem Header="_Save"/>
+            </MenuItem>
+         </Menu>
+
+         <ListView GridViewColumnHeader.Click="OnColumnClick"  ItemsSource="{Binding AllSymbols, UpdateSourceTrigger=Default, Mode=OneTime}">
+            <ListView.Resources>
+               <Style TargetType="Grid" x:Key="HeaderGridStyle">
+                  <Setter Property="Height" Value="20" />
+               </Style>
+
+               <Style TargetType="TextBlock" x:Key="HeaderTextBlockStyle">
+                  <Setter Property="Margin" Value="5,0,0,0" />
+                  <Setter Property="VerticalAlignment" Value="Center" />
+               </Style>
+
+               <Style TargetType="Path" x:Key="HeaderPathStyle">
+                  <Setter Property="StrokeThickness" Value="1" />
+                  <Setter Property="Fill" Value="Gray" />
+                  <Setter Property="Width" Value="20" />
+                  <Setter Property="HorizontalAlignment" Value="Center" />
+                  <Setter Property="Margin" Value="5,0,5,0" />
+                  <Setter Property="SnapsToDevicePixels" Value="True" />
+               </Style>
+
+               <DataTemplate x:Key="HeaderTemplateDefault">
+                  <Grid Style="{StaticResource HeaderGridStyle}">
+                     <TextBlock Text="{Binding }" Style="{StaticResource HeaderTextBlockStyle}" />
+                  </Grid>
+               </DataTemplate>
+
+               <DataTemplate x:Key="HeaderTemplateArrowUp">
+                  <Grid Style="{StaticResource HeaderGridStyle}">
+                     <Path Data="M 7,3 L 13,3 L 10,0 L 7,3" Style="{StaticResource HeaderPathStyle}" />
+                     <TextBlock Text="{Binding }" Style="{StaticResource HeaderTextBlockStyle}" />
+                  </Grid>
+               </DataTemplate>
+
+               <DataTemplate x:Key="HeaderTemplateArrowDown">
+                  <Grid Style="{StaticResource HeaderGridStyle}">
+                     <Path Data="M 7,0 L 10,3 L 13,0 L 7,0"  Style="{StaticResource HeaderPathStyle}" />
+                     <TextBlock Text="{Binding }" Style="{StaticResource HeaderTextBlockStyle}" />
+                  </Grid>
+               </DataTemplate>
+            </ListView.Resources>
+
+            <ListView.View>
+               <GridView ColumnHeaderTemplate="{StaticResource HeaderTemplateDefault}">
+                  <GridViewColumn Header="Size" Width="100px" DisplayMemberBinding="{Binding Path=Size}" />
+                  <GridViewColumn Header="Name" Width="100px" DisplayMemberBinding="{Binding Path=Name}"/>
+                  <GridViewColumn Header="Source" Width="100px" DisplayMemberBinding="{Binding Path=SourceFile}"/>
+               </GridView>
+            </ListView.View>
+         </ListView>
+      </DockPanel>
+   </Grid>
 </Window>

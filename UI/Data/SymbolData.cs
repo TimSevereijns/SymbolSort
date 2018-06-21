@@ -14,7 +14,7 @@ namespace UI.Data
         public SymbolData()
         {
             var inputFile = new InputFile(
-                @"C:\Users\tsevereijns\Desktop\glCanvas-dump.txt",
+                @"C:\Users\tim\Desktop\comdat_dump.txt",
                 InputType.comdat);
 
             var symbolList = new List<Symbol>();

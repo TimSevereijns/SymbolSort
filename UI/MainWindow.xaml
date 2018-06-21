@@ -27,7 +27,7 @@
       <DockPanel>
          <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-               <MenuItem Header="_Open"/>
+               <MenuItem Header="Scan _Folder..." Click="OnFileOpenClick"/>
                <MenuItem Header="_Close"/>
                <MenuItem Header="_Save"/>
             </MenuItem>

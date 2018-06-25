@@ -1,47 +1,58 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Data;
 using UI.Data;
 
 namespace UI.ViewModels
 {
-    public class MainWindowViewModel : BaseViewModel
-    {
-        private ObservableCollection<SymbolTableRowViewModel> _allSymbols;
+   public class MainWindowViewModel : BaseViewModel
+   {
+      private ObservableCollection<SymbolTableRowViewModel> _allSymbols;
+      private ICollectionView _symbolsView;
 
-        public MainWindowViewModel()
-        {
-            _allSymbols = new ObservableCollection<SymbolTableRowViewModel>();
+      public MainWindowViewModel()
+      {
+         _allSymbols = new ObservableCollection<SymbolTableRowViewModel>();
 
-            var symbolData = new SymbolData();
-            foreach (var symbol in symbolData.AllComdatSymbols)
+         var symbolData = new SymbolData();
+         foreach (var symbol in symbolData.AllComdatSymbols)
+         {
+            var rowData = new SymbolTableRowViewModel
             {
-                var rowData = new SymbolTableRowViewModel
-                {
-                    Name = symbol.name,
-                    Size = symbol.size,
-                    SourceFile = symbol.source_filename
-                };
+               Name = symbol.name,
+               Size = symbol.size,
+               SourceFile = symbol.source_filename
+            };
 
-                _allSymbols.Add(rowData);
-            }
-        }
+            _allSymbols.Add(rowData);
+         }
 
-        public ObservableCollection<SymbolTableRowViewModel> AllSymbols
-        {
-            get => _allSymbols;
-            set
+         _symbolsView = CollectionViewSource.GetDefaultView(_allSymbols);
+
+         SortSymbols();
+      }
+
+      private void SortSymbols()
+      {
+         var listView = _symbolsView as ListCollectionView;
+         listView.CustomSort = new SymbolSizeSorter();
+      }
+
+      public ICollectionView AllSymbols
+      {
+         get => _symbolsView;
+         set
+         {
+            if (value != _symbolsView)
             {
-                if (value != _allSymbols)
-                {
-                    OnPropertyChanged(InternalEventArgsCache.Lines);
-                }
+               OnPropertyChanged(InternalEventArgsCache.Lines);
             }
-        }
+         }
+      }
 
-        internal static class InternalEventArgsCache
-        {
-            internal static readonly PropertyChangedEventArgs Lines = new PropertyChangedEventArgs("Lines");
-        }
-    }
+      internal static class InternalEventArgsCache
+      {
+         internal static readonly PropertyChangedEventArgs Lines = new PropertyChangedEventArgs("Lines");
+      }
+   }
 }

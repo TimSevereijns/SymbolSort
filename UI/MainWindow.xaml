@@ -7,22 +7,6 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="720" Width="1280">
 
-   <Window.Resources>
-      <DataTemplate x:Key="HeaderTemplateArrowUp">
-         <DockPanel LastChildFill="True" Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}">
-            <Path x:Name="arrowUp" StrokeThickness="1" Fill="Gray" Data="M 5,10 L 15,10 L 10,5 L 5,10" DockPanel.Dock="Right" Width="20" HorizontalAlignment="Right" Margin="5,0,5,0" SnapsToDevicePixels="True"/>
-            <TextBlock Text="{Binding }" />
-         </DockPanel>
-      </DataTemplate>
-
-      <DataTemplate x:Key="HeaderTemplateArrowDown">
-         <DockPanel LastChildFill="True" Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}">
-            <Path x:Name="arrowDown" StrokeThickness="1" Fill="Gray"  Data="M 5,5 L 10,10 L 15,5 L 5,5" DockPanel.Dock="Right" Width="20" HorizontalAlignment="Right" Margin="5,0,5,0" SnapsToDevicePixels="True"/>
-            <TextBlock Text="{Binding }" />
-         </DockPanel>
-      </DataTemplate>
-   </Window.Resources>
-
    <Grid>
       <DockPanel>
          <Menu DockPanel.Dock="Top">
@@ -33,55 +17,43 @@
             </MenuItem>
          </Menu>
 
-         <ListView GridViewColumnHeader.Click="OnColumnClick"  ItemsSource="{Binding AllSymbols, UpdateSourceTrigger=Default, Mode=OneTime}">
-            <ListView.Resources>
-               <Style TargetType="Grid" x:Key="HeaderGridStyle">
-                  <Setter Property="Height" Value="20" />
+         <DataGrid x:Name="SymbolDataGrid"
+            AutoGenerateColumns="False"
+            ItemsSource="{Binding AllSymbols, UpdateSourceTrigger=Default, Mode=OneTime}"
+            Background="LightGray"
+            RowBackground="LightYellow"
+            AlternatingRowBackground="LightBlue"
+            IsReadOnly="True"
+            ColumnWidth="*">
+            <DataGrid.RowStyle>
+               <Style TargetType="{x:Type DataGridRow}">
+                  <Setter Property="Padding" Value="5, 5, 5, 5"/>
                </Style>
+            </DataGrid.RowStyle>
 
-               <Style TargetType="TextBlock" x:Key="HeaderTextBlockStyle">
-                  <Setter Property="Margin" Value="5,0,0,0" />
-                  <Setter Property="VerticalAlignment" Value="Center" />
+            <DataGrid.CellStyle>
+               <Style TargetType="{x:Type DataGridCell}">
+                  <Setter Property="Padding" Value="3"/>
+
+                  <!-- Add the Padding property above to the TemplateBinding -->
+                  <Setter Property="Template">
+                     <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type DataGridCell}">
+                           <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                              <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                           </Border>
+                        </ControlTemplate>
+                     </Setter.Value>
+                  </Setter>
                </Style>
+            </DataGrid.CellStyle>
 
-               <Style TargetType="Path" x:Key="HeaderPathStyle">
-                  <Setter Property="StrokeThickness" Value="1" />
-                  <Setter Property="Fill" Value="Gray" />
-                  <Setter Property="Width" Value="20" />
-                  <Setter Property="HorizontalAlignment" Value="Center" />
-                  <Setter Property="Margin" Value="5,0,5,0" />
-                  <Setter Property="SnapsToDevicePixels" Value="True" />
-               </Style>
-
-               <DataTemplate x:Key="HeaderTemplateDefault">
-                  <Grid Style="{StaticResource HeaderGridStyle}">
-                     <TextBlock Text="{Binding }" Style="{StaticResource HeaderTextBlockStyle}" />
-                  </Grid>
-               </DataTemplate>
-
-               <DataTemplate x:Key="HeaderTemplateArrowUp">
-                  <Grid Style="{StaticResource HeaderGridStyle}">
-                     <Path Data="M 7,3 L 13,3 L 10,0 L 7,3" Style="{StaticResource HeaderPathStyle}" />
-                     <TextBlock Text="{Binding }" Style="{StaticResource HeaderTextBlockStyle}" />
-                  </Grid>
-               </DataTemplate>
-
-               <DataTemplate x:Key="HeaderTemplateArrowDown">
-                  <Grid Style="{StaticResource HeaderGridStyle}">
-                     <Path Data="M 7,0 L 10,3 L 13,0 L 7,0"  Style="{StaticResource HeaderPathStyle}" />
-                     <TextBlock Text="{Binding }" Style="{StaticResource HeaderTextBlockStyle}" />
-                  </Grid>
-               </DataTemplate>
-            </ListView.Resources>
-
-            <ListView.View>
-               <GridView ColumnHeaderTemplate="{StaticResource HeaderTemplateDefault}">
-                  <GridViewColumn Header="Size" Width="100px" DisplayMemberBinding="{Binding Path=Size}" />
-                  <GridViewColumn Header="Name" Width="100px" DisplayMemberBinding="{Binding Path=Name}"/>
-                  <GridViewColumn Header="Source" Width="100px" DisplayMemberBinding="{Binding Path=SourceFile}"/>
-               </GridView>
-            </ListView.View>
-         </ListView>
+            <DataGrid.Columns>
+               <DataGridTextColumn Header="Size (Bytes)" Binding="{Binding Path=Size}" Width="Auto"/>
+               <DataGridTextColumn Header="Symbol Name" Binding="{Binding Path=Name}" Width="2*"/>
+               <DataGridTextColumn Header="Source File" Binding="{Binding Path=SourceFile}" Width="1*"/>
+            </DataGrid.Columns>
+         </DataGrid>
       </DockPanel>
    </Grid>
 </Window>

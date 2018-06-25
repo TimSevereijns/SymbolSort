@@ -1,13 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace UI.ViewModels
 {
-    public class SymbolTableRowViewModel : BaseViewModel
+   class SymbolSizeSorter : IComparer
+   {
+      /// <summary>
+      /// Sorts in descending order.
+      /// </summary>
+      ///
+      /// <param name="lhs"></param>
+      /// <param name="rhs"></param>
+      ///
+      /// <returns></returns>
+      public int Compare(object lhs, object rhs)
+      {
+         var left = lhs as SymbolTableRowViewModel;
+         var right = rhs as SymbolTableRowViewModel;
+
+         Debug.Assert(left != null);
+         Debug.Assert(right != null);
+
+         return right.Size.CompareTo(left.Size);
+      }
+   }
+
+   /// <summary>
+   /// @todo
+   /// </summary>
+   public class SymbolTableRowViewModel : BaseViewModel
     {
         private int _size;
         private string _name;

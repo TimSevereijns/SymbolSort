@@ -14,14 +14,6 @@ namespace UI.Data
 
         public SymbolData()
         {
-            //var inputFile = new InputFile(
-            //    @"C:\Users\tim\Desktop\comdat_dump.txt",
-            //    InputType.comdat);
-
-            //var symbolList = new List<Symbol>();
-            //SymbolSorter.LoadSymbols(inputFile, symbolList, null, Options.DumpCompleteSymbols);
-
-            //AllComdatSymbols = symbolList;
         }
 
         public void ParseObjectFiles(string path)
@@ -30,7 +22,13 @@ namespace UI.Data
             var unparsedComdatData = Utilities.ComdatDumper.Run(objectFiles);
 
             var stream = GenerateStreamFromString(unparsedComdatData);
-            var symbols = WindowsParsers.ReadSymbolsFromCOMDAT(stream);
+
+            void progressCallback(int completionPercentage)
+            {
+                // @todo Add implementation
+            }
+
+            var symbols = SymbolSorter.ReadSymbolsFromCOMDAT(stream, progressCallback);
 
             AllComdatSymbols = symbols;
         }

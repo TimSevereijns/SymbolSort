@@ -16,18 +16,12 @@ namespace UI.Data
         {
         }
 
-        public void ParseObjectFiles(string path)
+        public void ParseObjectFiles(string path, Action<int> progressCallback)
         {
             var objectFiles = Utilities.DriveScanning.ScanForFiles(path, Utilities.FileExtension.OBJ);
             var unparsedComdatData = Utilities.ComdatDumper.Run(objectFiles);
 
             var stream = GenerateStreamFromString(unparsedComdatData);
-
-            void progressCallback(int completionPercentage)
-            {
-                // @todo Add implementation
-            }
-
             var symbols = SymbolSorter.ReadSymbolsFromCOMDAT(stream, progressCallback);
 
             AllComdatSymbols = symbols;

@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Data;
@@ -29,10 +30,10 @@ namespace UI.ViewModels
             }
         }
 
-        public void ScanForObjectFiles(string path)
+        public void ScanForObjectFiles(string path, Action<int> progressCallback)
         {
             var symbolData = new SymbolData();
-            symbolData.ParseObjectFiles(path);
+            symbolData.ParseObjectFiles(path, progressCallback);
 
             foreach (var symbol in symbolData.AllComdatSymbols)
             {

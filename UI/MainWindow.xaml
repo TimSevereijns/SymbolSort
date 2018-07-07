@@ -9,6 +9,7 @@
 
    <Grid>
       <DockPanel>
+         <!-- Status Bar-->
          <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                <MenuItem Header="Scan _Folder..." Click="OnFileOpenClick"/>
@@ -17,48 +18,105 @@
             </MenuItem>
          </Menu>
 
-         <DataGrid x:Name="SymbolDataGrid"
-            AutoGenerateColumns="False"
-            ItemsSource="{Binding AllSymbols}"
-            Background="LightGray"
-            RowBackground="LightYellow"
-            AlternatingRowBackground="LightBlue"
-            IsReadOnly="True"
-            ColumnWidth="*">
-            <DataGrid.RowStyle>
-               <Style TargetType="{x:Type DataGridRow}">
-                  <Setter Property="Padding" Value="5, 5, 5, 5"/>
-               </Style>
-            </DataGrid.RowStyle>
+         <!-- Status Bar-->
+         <StatusBar DockPanel.Dock="Bottom">
+            <StatusBar.ItemsPanel>
+               <ItemsPanelTemplate>
+                  <Grid>
+                     <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                     </Grid.RowDefinitions>
+                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto" MinWidth="200"/>
+                     </Grid.ColumnDefinitions>
+                  </Grid>
+               </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem>
+               <TextBlock>Ready</TextBlock>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1">
+               <ProgressBar x:Name="ProgressBar" IsEnabled="false" Value="0" Width="194" Height="18"/>
+            </StatusBarItem>
+         </StatusBar>
 
-            <DataGrid.CellStyle>
-               <Style TargetType="{x:Type DataGridCell}">
-                  <Setter Property="Padding" Value="3"/>
+         <!-- Side Bar Panel -->
+         <DockPanel
+            DockPanel.Dock="Right"
+            Background="#F0F0F0"
+            Width="200"
+            HorizontalAlignment="Stretch">
+            <StackPanel
+               Margin="2">
+               <Grid Margin="4">
+                  <StackPanel>
+                     <TextBlock FontWeight="Bold" Text="General:" Padding="0 4"></TextBlock>
+                     <CheckBox Content="Show Complete Listing"></CheckBox>
+                  </StackPanel>
+               </Grid>
+               <Grid Margin="4">
+                  <StackPanel>
+                     <TextBlock FontWeight="Bold" Text="EXE and PDB:" Padding="0 4"></TextBlock>
+                     <CheckBox Content="Include Public Symbols"></CheckBox>
+                     <CheckBox Content="Include Redundant Symbols"></CheckBox>
+                     <CheckBox Content="Include Sections as Symbols"></CheckBox>
+                     <CheckBox Content="Include Unmapped Addresses"></CheckBox>
+                  </StackPanel>
+               </Grid>
+               <Grid Margin="4">
+                  <Button Content="Apply Changes"></Button>
+               </Grid>
+            </StackPanel>
+         </DockPanel>
 
-                  <!-- Add the Padding property above to the TemplateBinding -->
-                  <Setter Property="Template">
-                     <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type DataGridCell}">
-                           <Border
-                              Padding="{TemplateBinding Padding}"
-                              BorderBrush="{TemplateBinding BorderBrush}"
-                              BorderThickness="{TemplateBinding BorderThickness}"
-                              Background="{TemplateBinding Background}"
-                              SnapsToDevicePixels="True">
-                              <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                           </Border>
-                        </ControlTemplate>
-                     </Setter.Value>
-                  </Setter>
-               </Style>
-            </DataGrid.CellStyle>
+         <!-- Data Grid Panel -->
+         <DockPanel
+            Width="Auto"
+            HorizontalAlignment="Stretch">
+            <DataGrid x:Name="SymbolDataGrid"
+               AutoGenerateColumns="False"
+               ItemsSource="{Binding AllSymbols}"
+               Background="LightGray"
+               RowBackground="LightYellow"
+               AlternatingRowBackground="LightBlue"
+               IsReadOnly="True"
+               ColumnWidth="*">
+               <DataGrid.RowStyle>
+                  <Style TargetType="{x:Type DataGridRow}">
+                     <Setter Property="Padding" Value="5, 5, 5, 5"/>
+                  </Style>
+               </DataGrid.RowStyle>
 
-            <DataGrid.Columns>
-               <DataGridTextColumn Header="Size (Bytes)" Binding="{Binding Path=Size}" Width="Auto"/>
-               <DataGridTextColumn Header="Symbol Name" Binding="{Binding Path=Name}" Width="2*"/>
-               <DataGridTextColumn Header="Source File" Binding="{Binding Path=SourceFile}" Width="1*"/>
-            </DataGrid.Columns>
-         </DataGrid>
+               <DataGrid.CellStyle>
+                  <Style TargetType="{x:Type DataGridCell}">
+                     <Setter Property="Padding" Value="3"/>
+
+                     <!-- Add the Padding property above to the TemplateBinding -->
+                     <Setter Property="Template">
+                        <Setter.Value>
+                           <ControlTemplate TargetType="{x:Type DataGridCell}">
+                              <Border
+                                 Padding="{TemplateBinding Padding}"
+                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                 BorderThickness="{TemplateBinding BorderThickness}"
+                                 Background="{TemplateBinding Background}"
+                                 SnapsToDevicePixels="True">
+                                 <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                              </Border>
+                           </ControlTemplate>
+                        </Setter.Value>
+                     </Setter>
+                  </Style>
+               </DataGrid.CellStyle>
+
+               <DataGrid.Columns>
+                  <DataGridTextColumn Header="Size (Bytes)" Binding="{Binding Path=Size}" Width="Auto"/>
+                  <DataGridTextColumn Header="Symbol Name" Binding="{Binding Path=Name}" Width="2*"/>
+                  <DataGridTextColumn Header="Source File" Binding="{Binding Path=SourceFile}" Width="1*"/>
+               </DataGrid.Columns>
+            </DataGrid>
+         </DockPanel>
       </DockPanel>
    </Grid>
 </Window>

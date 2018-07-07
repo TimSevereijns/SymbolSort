@@ -559,11 +559,6 @@ namespace SymbolSort
             }
         }
 
-        public void Hello()
-        {
-
-        }
-
         private static Regex ReadSymbolsFromCOMDAT_regexName = new Regex(@"\n[ \t]*([^ \t]+)[ \t]+name", RegexOptions.Compiled);
         private static Regex ReadSymbolsFromCOMDAT_regexSize = new Regex(@"\n[ \t]*([A-Za-z0-9]+)[ \t]+size of raw data", RegexOptions.Compiled);
         private static Regex ReadSymbolsFromCOMDAT_regexCOMDAT = new Regex(@"\n[ \t]*COMDAT; sym= \""([^\n\""]+)", RegexOptions.Compiled);

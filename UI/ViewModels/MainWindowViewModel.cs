@@ -1,58 +1,71 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows.Data;
 using UI.Data;
 
 namespace UI.ViewModels
 {
-   public class MainWindowViewModel : BaseViewModel
-   {
-      private ObservableCollection<SymbolTableRowViewModel> _allSymbols;
-      private ICollectionView _symbolsView;
+    public class MainWindowViewModel : BaseViewModel
+    {
+        private ObservableCollection<SymbolTableRowViewModel> _allSymbols;
+        private ICollectionView _symbolsView;
 
-      public MainWindowViewModel()
-      {
-         _allSymbols = new ObservableCollection<SymbolTableRowViewModel>();
+        public MainWindowViewModel()
+        {
+            _allSymbols = new ObservableCollection<SymbolTableRowViewModel>();
+            _symbolsView = CollectionViewSource.GetDefaultView(_allSymbols);
+        }
 
-         var symbolData = new SymbolData();
-         foreach (var symbol in symbolData.AllComdatSymbols)
-         {
-            var rowData = new SymbolTableRowViewModel
+        public ICollectionView AllSymbols
+        {
+            get => _symbolsView;
+            set
             {
-               Name = symbol.name,
-               Size = symbol.size,
-               SourceFile = symbol.source_filename
-            };
-
-            _allSymbols.Add(rowData);
-         }
-
-         _symbolsView = CollectionViewSource.GetDefaultView(_allSymbols);
-
-         SortSymbols();
-      }
-
-      private void SortSymbols()
-      {
-         var listView = _symbolsView as ListCollectionView;
-         listView.CustomSort = new SymbolSizeSorter();
-      }
-
-      public ICollectionView AllSymbols
-      {
-         get => _symbolsView;
-         set
-         {
-            if (value != _symbolsView)
-            {
-               OnPropertyChanged(InternalEventArgsCache.Lines);
+                if (value != _symbolsView)
+                {
+                    OnPropertyChanged(InternalEventArgsCache.AllSymbols);
+                }
             }
-         }
-      }
+        }
 
-      internal static class InternalEventArgsCache
-      {
-         internal static readonly PropertyChangedEventArgs Lines = new PropertyChangedEventArgs("Lines");
-      }
-   }
+        public void ScanForObjectFiles(string path)
+        {
+            var symbolData = new SymbolData();
+            symbolData.ParseObjectFiles(path);
+
+            foreach (var symbol in symbolData.AllComdatSymbols)
+            {
+                var rowData = new SymbolTableRowViewModel
+                {
+                    Name = symbol.name,
+                    Size = symbol.size,
+                    SourceFile = symbol.source_filename
+                };
+
+                _allSymbols.Add(rowData);
+            }
+
+            SortSymbols();
+        }
+
+        #region private
+
+        private void SortSymbols()
+        {
+            var listView = AllSymbols as ListCollectionView;
+            Debug.Assert(listView != null);
+
+            listView.CustomSort = new SymbolSizeSorter();
+
+            OnPropertyChanged(InternalEventArgsCache.AllSymbols);
+        }
+
+        #endregion
+
+        internal static class InternalEventArgsCache
+        {
+            internal static readonly PropertyChangedEventArgs AllSymbols = new PropertyChangedEventArgs("AllSymbols");
+        }
+    }
 }

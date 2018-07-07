@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using UI.ViewModels;
 
@@ -15,16 +14,15 @@ namespace UI
    {
       private ICollectionView _allSymbolsView = null;
 
+      private MainWindowViewModel _viewModel = new MainWindowViewModel();
+
       public MainWindow()
       {
          InitializeComponent();
 
-         DataContext = new MainWindowViewModel();
+         DataContext = _viewModel;
 
-         if (DataContext is MainWindowViewModel viewModel)
-         {
-            _allSymbolsView = CollectionViewSource.GetDefaultView(viewModel.AllSymbols);
-         }
+         _allSymbolsView = CollectionViewSource.GetDefaultView(_viewModel.AllSymbols);
       }
 
       public void OnFileOpenClick(object sender, RoutedEventArgs eventArgs)
@@ -34,12 +32,17 @@ namespace UI
             EnsurePathExists = true,
             EnsureFileExists = false,
             AllowNonFileSystemItems = false,
+            IsFolderPicker = true,
             Title = "Select a Folder Containing Object Files"
          };
 
          if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
          {
-            var path = Directory.Exists(dialog.FileName) ? dialog.FileName : Path.GetDirectoryName(dialog.FileName);
+            var path = Directory.Exists(dialog.FileName)
+               ? dialog.FileName 
+               : Path.GetDirectoryName(dialog.FileName);
+
+            _viewModel.ScanForObjectFiles(path);
          }
       }
    }

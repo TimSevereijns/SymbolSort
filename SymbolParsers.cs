@@ -402,6 +402,85 @@ namespace SymbolSort
             Console.WriteLine("{0,3}", 100);
         }
 
+        public static List<Symbol> ReadSymbolsFromCOMDAT(MemoryStream inputStream)
+        {
+            Regex regexName = new Regex(@"\n[ \t]*([^ \t]+)[ \t]+name");
+            Regex regexSize = new Regex(@"\n[ \t]*([A-Za-z0-9]+)[ \t]+size of raw data");
+            Regex regexCOMDAT = new Regex(@"\n[ \t]*COMDAT; sym= \""([^\n\""]+)");
+
+            StreamReader reader = new StreamReader(inputStream);
+
+            string souceFileName = string.Empty;
+
+            var allSymbols = new List<Symbol>();
+
+            while (!reader.EndOfStream)
+            {
+                string line;
+                do
+                {
+                    line = reader.ReadLine();
+                }
+                while (!reader.EndOfStream && string.IsNullOrEmpty(line));
+
+                if (line.StartsWith("SECTION HEADER"))
+                {
+                    string record = string.Empty;
+                    while (!reader.EndOfStream)
+                    {
+                        line = reader.ReadLine();
+                        if (string.IsNullOrEmpty(line))
+                        {
+                            break;
+                        }
+
+                        record += "\n";
+                        record += line;
+                    }
+
+                    var symbol = new Symbol();
+
+                    try
+                    {
+                        Match match = regexCOMDAT.Match(record);
+
+                        symbol.name = match.Groups[1].Value;
+                        if (!string.IsNullOrEmpty(symbol.name))
+                        {
+                            symbol.rva_start = 0;
+                            symbol.rva_end = 0;
+                            symbol.source_filename = souceFileName;
+                            symbol.short_name = symbol.name;
+                            match = regexName.Match(record);
+                            symbol.section = match.Groups[1].Value;
+
+                            match = regexSize.Match(record);
+                            symbol.size = Int32.Parse(match.Groups[1].Value, NumberStyles.AllowHexSpecifier);
+                            symbol.count = 1;
+
+                            allSymbols.Add(symbol);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                else if (line.StartsWith("Dump of file "))
+                {
+                    souceFileName = line.Substring("Dump of file ".Length);
+                }
+                else
+                {
+                    while (!reader.EndOfStream && !string.IsNullOrEmpty(line))
+                    {
+                        line = reader.ReadLine();
+                    }
+                }
+            }
+
+            return allSymbols;
+        }
+
         public static void ReadSymbolsFromPDB(List<Symbol> symbols, string filename, string searchPath, Options options)
         {
             DiaSource diaSource = new DiaSource();
